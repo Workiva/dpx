@@ -25,7 +25,7 @@ String usage() => '''Usage:
 
 ${argParser.usage}
 
-<package-spec> supports custom pub servers and git sources. See readme for more info: [TODO]''';
+<package-spec> supports custom pub servers and git sources. See readme for more info: https://github.com/Workiva/dpx#package-sources''';
 
 class DpxArgs {
   // Flags

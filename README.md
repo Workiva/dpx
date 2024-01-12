@@ -4,7 +4,7 @@
 
 Until this is published to pub, you'll have to install via Git:
 ```bash
-dart pub global activate -sgit git@github.com:evanweible-wf/git_playground.git --git-ref=dpx/main
+dart pub global activate -sgit git@github.com:Workiva/dpx.git
 ```
 
 For ease of use, [follow these instructions][dart run from path] to add the
@@ -54,7 +54,6 @@ For other files, dpx lets you omit the `<pkg>` portion since it can be inferred.
 ```bash
 dpx --package=build_runner :graph_inspector
 ```
-
 
 ## Package Sources
 
