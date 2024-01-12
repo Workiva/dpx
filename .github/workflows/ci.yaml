@@ -31,6 +31,6 @@ jobs:
         run: dart run dependency_validator
       - name: Formatting
         if: ${{ matrix.sdk == 'stable' && matrix.os == 'ubuntu' }}
-        run: dart run format --output-none --set-exit-if-changed .
+        run: dart format --output-none --set-exit-if-changed .
       - name: Tests
         run: dart test
