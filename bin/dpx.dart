@@ -79,7 +79,7 @@ void main(List<String> args) async {
     logger.trace('Took ${dpxTime}s to start command.');
 
     // First, try to run the command directly, assuming that it's in the PATH.
-    logger.trace('CMD: $command ${dpxArgs.commandArgs.join(' ')}');
+    logger.trace('SUBPROCESS: $command ${dpxArgs.commandArgs.join(' ')}');
     try {
       final process = await Process.start(
         command,
@@ -87,20 +87,39 @@ void main(List<String> args) async {
         mode: ProcessStartMode.inheritStdio,
       );
       ensureProcessExit(process);
-    } on ProcessException catch (e) {
-      if (e.message.contains('No such file')) {
-        // If command was not found in the PATH, fallback to `dart pub global run`
-        logger
-          ..trace(
-              'Command not found in path, falling back to `dart pub global run`')
-          ..trace(
-              'CMD: dart pub global run $command ${dpxArgs.commandArgs.join(' ')}');
+      exit(await process.exitCode);
+    } on ProcessException catch (error) {
+      if (error.message.contains('No such file')) {
+        // If the command was not found, it may only be available within the
+        // package's `bin/`. Fallback to `dart pub global run`.
+        logger.trace('Command not found, trying `dart pub global run`');
+        final fallbackArgs = [
+          'pub',
+          'global',
+          'run',
+          command,
+          ...dpxArgs.commandArgs,
+        ];
+        logger.trace('SUBPROCESS: dart ${fallbackArgs.join(' ')}');
         final process = await Process.start(
           'dart',
-          ['pub', 'global', 'run', command, ...dpxArgs.commandArgs],
+          fallbackArgs,
           mode: ProcessStartMode.inheritStdio,
         );
         ensureProcessExit(process);
+        final dpgrCode = await process.exitCode;
+        if ([ExitCode.data.code /* 65 */, ExitCode.noInput.code /* 66 */]
+            .contains(dpgrCode)) {
+          // `dart pub global run <cmd>` exits with code 65 when the package for
+          // the given <cmd> is not active or code 66 when the file cannot be
+          // found within the package's `bin/`.
+          // These are both equivalent to "command not found".
+          throw ExitException(127, 'dpx: $command: command not found');
+        }
+        exit(await process.exitCode);
+      } else {
+        // Otherwise, the command was found but could not be executed.
+        throw ExitException(126, 'dpx: $command: ${error.message}');
       }
     }
   } on ExitException catch (error) {

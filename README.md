@@ -55,6 +55,15 @@ For other files, dpx lets you omit the `<pkg>` portion since it can be inferred.
 dpx --package=build_runner :graph_inspector
 ```
 
+## Exit Status
+
+| Exit Code | Meaning                                              |
+| --------- | ---------------------------------------------------- |
+| 0         | Success                                              |
+| >0        | Error                                                |
+| 126       | Target command was found, but could not be executed. |
+| 127       | Target command could not be found.                   |
+
 ## Package Sources
 
 The first arg to `dpx` or the value of the `--package` option is referred to as
@@ -90,7 +99,7 @@ dpx github+ssh:<org>/<repo> [args...]
 # - <path> if the package is not in the root of the repo
 # - <ref> to checkout a specific tag/branch/commit
 # Syntax:
-dpx <git-url>[#path:sub/dir,ref:v1.0.2] [args...]
+dpx <git-url>#path:sub/dir,ref:v1.0.2 [args...]
 # Examples:
 dpx github:Workiva/dpx#ref:v0.0.0 --help
 dpx github:Workiva/dpx#path:example/hello
@@ -105,8 +114,8 @@ If you encounter any issues, please run the command again with `--verbose`:
 dpx --verbose ...
 ```
 
-This will provide a lot more detail that might help identify an issue. If not,
-please [open an issue][new issue] and include the verbose logs.
+This will provide a lot more detail that might help identify the cause of your
+issue. If not, please [open an issue][new issue] and include the verbose logs.
 
 ## Why the name?
 
