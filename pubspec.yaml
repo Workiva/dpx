@@ -1,0 +1,22 @@
+name: dpx
+description: Execute Dart package binaries
+
+environment:
+  sdk: ">=2.19.0 <4.0.0"
+
+executables:
+  dpx:
+
+dependencies:
+  args: ^2.4.2
+  async: ^2.11.0
+  cli_util: ^0.4.0
+  io: ^1.0.4
+  path: ^1.8.3
+  pub_semver: ^2.1.4
+  yaml: ^3.1.2
+
+dev_dependencies:
+  dependency_validator: ^3.2.3
+  lints: ^2.0.1
+  test: ^1.24.3
