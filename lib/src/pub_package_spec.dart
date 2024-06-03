@@ -1,11 +1,18 @@
 import 'package_spec.dart';
 
 class PubPackageSpec extends PackageSpec {
+  @override
+  final String? packageExecutable;
   final String packageName;
   final String? pubServerUrl;
   final String? versionConstraint;
 
-  PubPackageSpec(this.packageName, {this.pubServerUrl, this.versionConstraint});
+  PubPackageSpec(
+    this.packageName, {
+    this.packageExecutable,
+    this.pubServerUrl,
+    this.versionConstraint,
+  });
 
   @override
   late final String description = _description();
@@ -14,6 +21,9 @@ class PubPackageSpec extends PackageSpec {
     final buffer = StringBuffer(packageName);
     if (versionConstraint != null) {
       buffer.write('@$versionConstraint');
+    }
+    if (packageExecutable != null) {
+      buffer.write(' (executable "$packageExecutable")');
     }
     if (pubServerUrl != null) {
       buffer.write(' (from $pubServerUrl)');

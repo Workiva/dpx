@@ -4,8 +4,15 @@ class GitPackageSpec extends PackageSpec {
   final String gitUrl;
   final String? gitPath;
   final String? gitRef;
+  @override
+  final String? packageExecutable;
 
-  GitPackageSpec(this.gitUrl, {this.gitPath, this.gitRef});
+  GitPackageSpec(
+    this.gitUrl, {
+    this.gitPath,
+    this.gitRef,
+    this.packageExecutable,
+  });
 
   @override
   late final String description = _description();
@@ -18,6 +25,9 @@ class GitPackageSpec extends PackageSpec {
       buffer.write(' at path "$gitPath"');
     } else if (gitRef != null) {
       buffer.write(' at ref "$gitRef"');
+    }
+    if (packageExecutable != null) {
+      buffer.write(' (executable "$packageExecutable")');
     }
     return buffer.toString();
   }
