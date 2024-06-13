@@ -50,3 +50,5 @@ jobs:
         run: dart format --output=none --set-exit-if-changed .
       - name: Tests
         run: dart test
+      - name: Publish dry-run
+        run: dart pub publish --dry-run
