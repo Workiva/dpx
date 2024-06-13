@@ -34,3 +34,8 @@ jobs:
         run: dart format --output=none --set-exit-if-changed .
       - name: Tests
         run: dart test
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./
+          format: cyclonedx-json
