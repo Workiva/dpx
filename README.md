@@ -2,9 +2,8 @@
 
 ## Installation
 
-Until this is published to pub, you'll have to install via Git:
 ```bash
-dart pub global activate -sgit git@github.com:Workiva/dpx.git
+dart pub global activate dpx
 ```
 
 For ease of use, [follow these instructions][dart run from path] to add the
@@ -13,47 +12,32 @@ system cache `bin` directory to your path so that you can run `dpx` directly.
 ## Usage
 
 ```bash
-# Execute a command from <pkg> with the same name as <pkg>
-dpx <pkg> [args...]
-
-# Execute <cmd> from <pkg>.
-# Use if there are multiple executables or if the executable name is different.
-dpx --package=<pkg> <cmd> [args...]
+dpx <package-spec>[:<package-executable>] [-e <executable>] [args...]
 ```
 
-## Command Running
+First, dpx will globally activate the package specified by `<package-spec>`.
+Then it will run a command.
 
-Once the necessary package is installed, dpx will attempt to run the command.
-
-First, it tries to run the command directly, assuming that it is available as an
-executable in the PATH. This works for Dart packages that declare an
-[executable in the pubspec][pubspec executable].
-
-```yaml
-# pubspec.yaml
-name: webdev
-executables:
-  webdev:
-```
+If neither `:<package-executable>` nor `-e <executable>` are specified, dpx will
+run the default package executable from `<package>`. This is equivalent to:
 
 ```bash
-# Installs and runs `webdev` executable in PATH
-dpx webdev
+dart pub global run <package> [args...]
 ```
 
-If that fails, dpx falls back to running the command with `dart pub global run`.
-The expected format of a command run this way is `<pkg>:<cmd>`, where `<pkg>` is
-the name of the Dart package and `<cmd>` is the name of the Dart file in `bin/`,
-minus the `.dart` extension.
-
-Dart lets you omit the `:<cmd>` portion if there's a file with the same name as
-the package.
-
-For other files, dpx lets you omit the `<pkg>` portion since it can be inferred.
+If `:<package-executable>` is specified, dpx will run that executable from the
+installed package. This is equivalent to:
 
 ```bash
-dpx --package=build_runner :graph_inspector
+dart pub global run <package>:<package-executable> [args...]
 ```
+
+If `-e <executable>` is specified, dpx will run `<executable> [args...]`
+directly after installing the package. This allows you to opt-out of the default
+method that uses `dart pub global run`. This may be useful for Dart packages
+that declare an [executable in the pubspec][pubspec executable] that would be
+available in the PATH, or if other executables outside of the package need to be
+used.
 
 ## Exit Status
 
@@ -79,9 +63,9 @@ dpx webdev@^3.0.0 [args...]
 
 # Install from custom pub server.
 # Syntax:
-dpx pub@<pub-server>:<pkg>[@<version-constraint] [args...]
+dpx pub@<pub-server>:<package>[@<version-constraint] [args...]
 # Example:
-dpx pub@pub.workiva.org:workiva_nullsafety_migrator@^1.0.0
+dpx pub@pub.workiva.org:dart_null_tools@^1.0.0
 
 # Install from a github repo.
 # Syntax:
@@ -99,11 +83,11 @@ dpx github+ssh:<org>/<repo> [args...]
 # - <path> if the package is not in the root of the repo
 # - <ref> to checkout a specific tag/branch/commit
 # Syntax:
-dpx <git-url>#path:sub/dir,ref:v1.0.2 [args...]
+dpx <git-url>#path=sub/dir,ref=v1.0.2 [args...]
 # Examples:
-dpx github:Workiva/dpx#ref:v0.0.0 --help
-dpx github:Workiva/dpx#path:example/hello
-dpx github:Workiva/dpx#path:example/hello,ref:v0.0.0
+dpx github:Workiva/dpx#ref=v0.1.0 --help
+dpx github:Workiva/dpx#path=example/dpx_hello
+dpx github:Workiva/dpx#path=example/dpx_hello,ref=v0.1.0
 ```
 
 ## Troubleshooting

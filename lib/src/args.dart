@@ -1,10 +1,13 @@
+import 'dart:io';
+
 import 'package:args/args.dart';
 import 'package:dpx/src/exit_exception.dart';
 import 'package:dpx/src/version.dart';
 import 'package:io/io.dart';
 
-final argParser = ArgParser(allowTrailingOptions: false)
+final argParser = ArgParser()
   ..addFlag('help', abbr: 'h', negatable: false)
+  ..addFlag('interactive', abbr: 'i', negatable: false, hide: true)
   ..addFlag('verbose', abbr: 'v', negatable: false)
   ..addFlag('version', negatable: false)
   ..addFlag('yes',
@@ -12,20 +15,21 @@ final argParser = ArgParser(allowTrailingOptions: false)
       negatable: false,
       help: 'Install missing packages without prompting.')
   ..addOption(
-    'package',
-    abbr: 'p',
+    'executable',
+    abbr: 'e',
     help:
-        'The package to install. Supports named packages, custom pub servers, version constraints, and git repos with path and ref options.',
-    valueHelp: 'package-spec',
+        'The executable to run. Overrides default behavior of using `dart pub global run ...`',
+    valueHelp: 'executable',
   );
 
 String usage() => '''Usage:
   dpx <package-spec> [args...]
-  dpx --package=<package-spec> <cmd> [args...]
+  dpx <package-spec>:<package-executable> [args...]
+  dpx <package-spec> -e <executable> [args...]
 
 ${argParser.usage}
 
-<package-spec> supports custom pub servers and git sources. See readme for more info: https://github.com/Workiva/dpx#package-sources''';
+<package-spec> supports named packages, custom pub servers, version constraints, and git sources with path and ref options. See readme for more info: https://github.com/Workiva/dpx#package-sources''';
 
 class DpxArgs {
   // Flags
@@ -33,15 +37,15 @@ class DpxArgs {
   final bool verbose;
 
   // Options/args
-  final String? command;
-  final List<String> commandArgs;
+  final String? executable;
   final String packageSpec;
+  final List<String> restArgs;
 
   DpxArgs({
     required this.autoInstall,
-    required this.command,
-    required this.commandArgs,
+    required this.executable,
     required this.packageSpec,
+    required this.restArgs,
     required this.verbose,
   });
 }
@@ -61,39 +65,28 @@ DpxArgs parseDpxArgs(List<String> args) {
     throw ExitException(ExitCode.success.code, packageVersion);
   }
 
-  // Either a package spec or a command name must be specified as the first
-  // positional arg.
+  if (parsedArgs['interactive'] == true) {
+    stdout.write('Enter the package spec and any additional args:\n> ');
+    final interactiveArgs = stdin.readLineSync()?.split(' ') ?? [];
+    if ({'--interactive', '-i'}.intersection({...interactiveArgs}).isNotEmpty) {
+      throw ExitException(ExitCode.usage.code,
+          'Cannot use --interactive flag in interactive mode.');
+    }
+    return parseDpxArgs(interactiveArgs);
+  }
+
+  // A package spec must be specified as the first positional arg.
   if (parsedArgs.rest.isEmpty) {
     throw ExitException(
         ExitCode.usage.code, '''Must provide at least one positional arg.
 ${usage()}''');
   }
 
-  String? command;
-  List<String> commandArgs;
-  String packageSpec;
-  if (!parsedArgs.wasParsed('package')) {
-    // When `--package` or `-p` is no specified, then we treat the first
-    // positional arg as both the package spec and the command to run. We do
-    // this by assuming that the command to run is the same as the package's
-    // name, which can be obtained from the package spec itself or from the
-    // logs when globally activating the package.
-    packageSpec = parsedArgs.rest.first;
-    commandArgs = parsedArgs.rest.skip(1).toList();
-  } else {
-    // When `--package` or `-p` is specified, then we avoid inferring the
-    // command to run from the package spec and instead require that the first
-    // positional arg be the command.
-    packageSpec = parsedArgs['package'];
-    command = parsedArgs.rest.first;
-    commandArgs = parsedArgs.rest.skip(1).toList();
-  }
-
   return DpxArgs(
     autoInstall: parsedArgs['yes'] == true,
-    command: command,
-    commandArgs: commandArgs,
-    packageSpec: packageSpec,
+    executable: parsedArgs['executable'], // may be null
+    packageSpec: parsedArgs.rest.first, // must be the first positional arg
+    restArgs: parsedArgs.rest.skip(1).toList(),
     verbose: parsedArgs['verbose'] == true,
   );
 }

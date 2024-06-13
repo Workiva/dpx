@@ -13,16 +13,19 @@ import 'package:io/io.dart';
 
 void main(List<String> args) async {
   final stopwatch = Stopwatch()..start();
+  var logger = Logger.standard();
 
   try {
     final dpxArgs = parseDpxArgs(args);
-    final logger = dpxArgs.verbose ? Logger.verbose() : Logger.standard();
+    if (dpxArgs.verbose) {
+      logger = Logger.verbose();
+    }
 
     PackageSpec spec;
     try {
       spec = PackageSpec.parse(dpxArgs.packageSpec);
-    } on PackageSpecException catch (error) {
-      throw ExitException(ExitCode.usage.code, '$error\n${usage()}');
+    } on PackageSpecException catch (error, stack) {
+      throw ExitException(ExitCode.usage.code, '$error\n${usage()}', stack);
     }
     logger.trace('Parsed package spec "${dpxArgs.packageSpec}" into $spec');
 
@@ -55,21 +58,39 @@ void main(List<String> args) async {
     }
 
     // Finalize the command to run.
-    String? command = dpxArgs.command;
-    if (command == null || command.startsWith(':')) {
+    String exectuable;
+    List<String> executableArgs;
+    String? packageExecutable;
+
+    // If the executable was given explicitly, use it.
+    if (dpxArgs.executable != null) {
+      exectuable = dpxArgs.executable!;
+      executableArgs = dpxArgs.restArgs;
+    } else {
+      // Otherwise, we'll use `dart pub global run` to run a package executable.
+      exectuable = 'dart';
+
+      // Note: this requires that we know the package name.
       if (packageName == null) {
-        throw ExitException(ExitCode.software.code,
-            'Could not infer package name to use as default command.');
+        throw ExitException(
+          ExitCode.software.code,
+          'Could not infer package name, which is needed to run its executables.',
+        );
       }
 
-      if (command == null) {
-        // If command was not explicitly given, default to the package name.
-        command = packageName;
-      } else {
-        // If command starts with `:`, it's shorthand that omits the package name.
-        // Example: dpx --package=build_runner :graph_inspector --> dart pub global run build_runner:graph_inspector
-        command = '$packageName$command';
-      }
+      // If the package spec included a package executable, use that, otherwise
+      // omit that part and let Dart run the package's default executable.
+      packageExecutable = spec.packageExecutable != null
+          ? '$packageName:${spec.packageExecutable}'
+          : packageName;
+
+      executableArgs = [
+        'pub',
+        'global',
+        'run',
+        packageExecutable,
+        ...dpxArgs.restArgs,
+      ];
     }
 
     // Log how long DPX took before handing off to the actual command.
@@ -78,55 +99,42 @@ void main(List<String> args) async {
     stopwatch.stop();
     logger.trace('Took ${dpxTime}s to start command.');
 
-    // First, try to run the command directly, assuming that it's in the PATH.
-    logger.trace('SUBPROCESS: $command ${dpxArgs.commandArgs.join(' ')}');
+    // Run the command.
+    logger.trace('SUBPROCESS: $exectuable ${executableArgs.join(' ')}');
     try {
       final process = await Process.start(
-        command,
-        dpxArgs.commandArgs,
+        exectuable,
+        executableArgs,
         mode: ProcessStartMode.inheritStdio,
       );
       ensureProcessExit(process);
-      exit(await process.exitCode);
+      final dpxExitCode = await process.exitCode;
+      if (packageExecutable != null &&
+          [ExitCode.data.code /* 65 */, ExitCode.noInput.code /* 66 */]
+              .contains(dpxExitCode)) {
+        // `dart pub global run <cmd>` exits with code 65 when the package for
+        // the given <cmd> is not active or code 66 when the file cannot be
+        // found within the package's `bin/`.
+        // These are both equivalent to "command not found".
+        throw ExitException(127, 'dpx: $packageExecutable: command not found');
+      }
+      exit(dpxExitCode);
     } on ProcessException catch (error) {
       if (error.message.contains('No such file')) {
-        // If the command was not found, it may only be available within the
-        // package's `bin/`. Fallback to `dart pub global run`.
-        logger.trace('Command not found, trying `dart pub global run`');
-        final fallbackArgs = [
-          'pub',
-          'global',
-          'run',
-          command,
-          ...dpxArgs.commandArgs,
-        ];
-        logger.trace('SUBPROCESS: dart ${fallbackArgs.join(' ')}');
-        final process = await Process.start(
-          'dart',
-          fallbackArgs,
-          mode: ProcessStartMode.inheritStdio,
-        );
-        ensureProcessExit(process);
-        final dpgrCode = await process.exitCode;
-        if ([ExitCode.data.code /* 65 */, ExitCode.noInput.code /* 66 */]
-            .contains(dpgrCode)) {
-          // `dart pub global run <cmd>` exits with code 65 when the package for
-          // the given <cmd> is not active or code 66 when the file cannot be
-          // found within the package's `bin/`.
-          // These are both equivalent to "command not found".
-          throw ExitException(127, 'dpx: $command: command not found');
-        }
-        exit(await process.exitCode);
+        throw ExitException(127, 'dpx: $exectuable: command not found');
       } else {
         // Otherwise, the command was found but could not be executed.
-        throw ExitException(126, 'dpx: $command: ${error.message}');
+        throw ExitException(126, 'dpx: $packageExecutable: ${error.message}');
       }
     }
-  } on ExitException catch (error) {
-    print(error.message);
+  } on ExitException catch (error, stack) {
+    logger.stderr(error.message);
+    if (logger.isVerbose) {
+      logger.stderr((error.stackTrace ?? stack).toString());
+    }
     exit(error.exitCode);
   } catch (error, stack) {
-    print('Unexpected uncaught exception:\n$error\n$stack');
+    logger.stderr('Unexpected uncaught exception:\n$error\n$stack');
     exit(ExitCode.software.code);
   }
 }
