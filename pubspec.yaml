@@ -1,6 +1,7 @@
 name: dpx
-description: Execute Dart package binaries
 version: 0.1.0
+description: Execute Dart package binaries
+repository: https://github.com/Workiva/dpx
 
 environment:
   sdk: '>=2.19.0 <4.0.0'
