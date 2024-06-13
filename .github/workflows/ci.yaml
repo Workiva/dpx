@@ -10,13 +10,29 @@ on:
       - '**'
 
 jobs:
-  dart:
+  build:
+    name: Dart build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - name: Install dependencies
+        run: dart pub get
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./
+          format: cyclonedx-json
+
+  checks:
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu, windows ]
         sdk: [ 2.19.6, stable ]
-    name: Dart ${{ matrix.sdk }} on ${{ matrix.os }}
+    name: Dart checks - ${{ matrix.sdk }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v4
