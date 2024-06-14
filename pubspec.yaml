@@ -1,5 +1,5 @@
 name: dpx
-version: 0.1.0-wip
+version: 0.1.0
 description: Execute Dart package binaries
 repository: https://github.com/Workiva/dpx
 
