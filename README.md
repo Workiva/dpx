@@ -50,9 +50,9 @@ used.
 
 ## Package Sources
 
-The first arg to `dpx` or the value of the `--package` option is referred to as
-a `<package-spec>`, which supports several different formats to enable
-installing from different sources and targeting specific versions.
+The first arg to `dpx` is referred to as a `<package-spec>`, which supports
+several different formats to enable installing from different sources and
+targeting specific versions.
 
 ```bash
 # Install from pub with an optional version constraint.
