@@ -32,15 +32,4 @@ jobs:
 
   publish:
     name: Publish to pub.dev
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dart-lang/setup-dart@v1
-        with:
-          sdk: stable
-      - name: Install dependencies
-        run: dart pub get
-      - name: Publish - dry run
-        run: dart pub publish --dry-run
-      - name: Publish
-        run: dart pub publish -f
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
