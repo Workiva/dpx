@@ -1,5 +1,5 @@
 name: dpx
-version: 0.1.1
+version: 0.1.2
 description: Easily install and execute Dart package binaries with one command.
 repository: https://github.com/Workiva/dpx
 
