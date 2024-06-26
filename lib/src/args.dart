@@ -5,7 +5,7 @@ import 'package:dpx/src/exit_exception.dart';
 import 'package:dpx/src/version.dart';
 import 'package:io/io.dart';
 
-final argParser = ArgParser()
+final argParser = ArgParser(allowTrailingOptions: false)
   ..addFlag('help', abbr: 'h', negatable: false)
   ..addFlag('interactive', abbr: 'i', negatable: false, hide: true)
   ..addFlag('verbose', abbr: 'v', negatable: false)
