@@ -1,10 +1,5 @@
 # TODO
 
-## Features / Functionality
-- [ ] Support multiple `--package` options?
-- [ ] Should `--yes` be supported? Risk vs convenience.
-- [ ] Should dpx try to find and use a local install of the command first?
-
 ## Unit Tests
 - [x] Package Spec parsing. Should cover:
   - [x] `lib/src/package_spec_scanner.dart`
@@ -32,6 +27,5 @@ Should run the `dpx` executable to cover these use cases:
   - [ ] github repo at ref
   - [ ] github repo at subpath
   - [ ] github repo at ref and subpath
-- [ ] `--package` and `<cmd>` as first arg, in path
-- [ ] `--package` and `<cmd>` as first arg, not in path
-- [ ] `--package` and `<cmd>` as first arg, `:<cmd>` shorthand
+- [ ] Executing specific package executable with args
+- [ ] Executing non-package executable with args
