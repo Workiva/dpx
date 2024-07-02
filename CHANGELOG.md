@@ -1,3 +1,8 @@
+## 0.2.0
+
+- #18 Disallow trailing options so that it's easier to pass args to the
+subcommand run by `dpx`.
+
 ## 0.1.2
 
 - Update LICENSE text.
