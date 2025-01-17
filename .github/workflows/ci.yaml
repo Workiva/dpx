@@ -52,3 +52,15 @@ jobs:
         run: dart test
       - name: Publish dry-run
         run: dart pub publish --dry-run
+  
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 2.19.6
+      - run: dart pub get
+      - run: |
+          dart ./bin/dpx.dart replace 'dpx' 'dpx-edited' ./pubspec.yaml
+          cat ./pubspec.yaml
