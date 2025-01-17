@@ -45,7 +45,7 @@ void main(List<String> args) async {
       logger
         ..stdout('Need to install the following packages:')
         ..stdout(spec.description);
-      if (!dpxArgs.autoInstall) {
+      if (stdin.hasTerminal && !dpxArgs.autoInstall) {
         stdout.write('Ok to proceed? (y/n) ');
         final response = prompt('yn', 'n');
         if (response != 'y') {
@@ -58,17 +58,17 @@ void main(List<String> args) async {
     }
 
     // Finalize the command to run.
-    String exectuable;
+    String executable;
     List<String> executableArgs;
     String? packageExecutable;
 
     // If the executable was given explicitly, use it.
     if (dpxArgs.executable != null) {
-      exectuable = dpxArgs.executable!;
+      executable = dpxArgs.executable!;
       executableArgs = dpxArgs.restArgs;
     } else {
       // Otherwise, we'll use `dart pub global run` to run a package executable.
-      exectuable = 'dart';
+      executable = 'dart';
 
       // Note: this requires that we know the package name.
       if (packageName == null) {
@@ -100,10 +100,10 @@ void main(List<String> args) async {
     logger.trace('Took ${dpxTime}s to start command.');
 
     // Run the command.
-    logger.trace('SUBPROCESS: $exectuable ${executableArgs.join(' ')}');
+    logger.trace('SUBPROCESS: $executable ${executableArgs.join(' ')}');
     try {
       final process = await Process.start(
-        exectuable,
+        executable,
         executableArgs,
         mode: ProcessStartMode.inheritStdio,
       );
@@ -121,7 +121,7 @@ void main(List<String> args) async {
       exit(dpxExitCode);
     } on ProcessException catch (error) {
       if (error.message.contains('No such file')) {
-        throw ExitException(127, 'dpx: $exectuable: command not found');
+        throw ExitException(127, 'dpx: $executable: command not found');
       } else {
         // Otherwise, the command was found but could not be executed.
         throw ExitException(126, 'dpx: $packageExecutable: ${error.message}');
