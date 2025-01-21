@@ -1,3 +1,7 @@
+## 0.2.1
+
+- #30 Default `-y` when ran from a non-interactive terminal
+
 ## 0.2.0
 
 - #18 Disallow trailing options so that it's easier to pass args to the
