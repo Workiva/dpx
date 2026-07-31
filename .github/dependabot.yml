@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      exclude:
+        - "*"
+  - package-ecosystem: "pub"
+    directories:
+      - "/"
+      - "/example/dpx_hello"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 4
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
